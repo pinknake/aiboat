@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mini AI Bot 🤖</title>
+<style>
+body{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+}
+#chat{
+  max-width:500px;
+  margin:40px auto;
+  background:#020617;
+  padding:15px;
+  border-radius:10px;
+}
+.msg{
+  margin:10px 0;
+}
+.user{color:#38bdf8}
+.bot{color:#22c55e}
+input{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:none;
+}
+</style>
+</head>
+<body>
+
+<div id="chat">
+  <h2>🤖 Mini AI Bot</h2>
+  <div id="messages"></div>
+  <input id="input" placeholder="Ask something..." />
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
+
+let memory = {};
+
+function botReply(text){
+  text = text.toLowerCase();
+
+  if(text.includes("hello") || text.includes("hi"))
+    return "Hello 👋 Main tumhara AI dost hoon.";
+
+  if(text.includes("name"))
+    return "Mera naam Mini-AI hai 🤖";
+
+  if(text.includes("how are you"))
+    return "Main theek hoon 😊 tum kaise ho?";
+
+  if(text.includes("india"))
+    return "India 🇮🇳 ek powerful aur beautiful desh hai.";
+
+  if(text.includes("money"))
+    return "Online paisa blogging, apps aur ads se kama sakte ho 💰";
+
+  if(text.includes("ai"))
+    return "AI matlab Artificial Intelligence 🧠 jo insaan jaisa sochta hai.";
+
+  return "Interesting 🤔 thoda aur explain karo.";
+}
+
+input.addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    let userText = input.value;
+    if(!userText) return;
+
+    messages.innerHTML += `<div class='msg user'>You: ${userText}</div>`;
+    let reply = botReply(userText);
+    messages.innerHTML += `<div class='msg bot'>AI: ${reply}</div>`;
+
+    input.value="";
+    messages.scrollTop = messages.scrollHeight;
+  }
+});
+</script>
+
+</body>
+</html>
