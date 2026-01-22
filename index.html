@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voice AI Assistant</title>
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+  padding:20px;
+}
+button{
+  padding:14px 25px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:black;
+  cursor:pointer;
+}
+#output{
+  margin-top:20px;
+  padding:15px;
+  background:#020617;
+  border-radius:10px;
+  font-size:17px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🤖 Voice AI (Hinglish)</h1>
+<p>🎙️ Bolo, AI sunega aur jawab dega</p>
+
+<button onclick="startListening()">🎤 Speak</button>
+
+<div id="output">AI reply yahan dikhega...</div>
+
+<script>
+const output = document.getElementById("output");
+
+// 🎤 Speech to Text
+function startListening() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "en-IN";
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const userText = event.results[0][0].transcript.toLowerCase();
+    output.innerHTML = "🧑 You: " + userText;
+
+    const reply = aiBrain(userText);
+    speak(reply);
+  };
+}
+
+// 🧠 AI BRAIN (ChatGPT style logic)
+function aiBrain(text) {
+
+  if (text.includes("hello") || text.includes("hi"))
+    return "Hello bhai! Main tumhara voice AI hoon. Kya help chahiye?";
+
+  if (text.includes("kaise ho"))
+    return "Main badiya hoon bhai, tum sunao kya chal raha hai?";
+
+  if (text.includes("naam"))
+    return "Mera naam Voice AI Assistant hai.";
+
+  if (text.includes("time"))
+    return "Abhi time hai " + new Date().toLocaleTimeString();
+
+  if (text.includes("date"))
+    return "Aaj ki date hai " + new Date().toDateString();
+
+  if (text.includes("tum kya kar sakte ho"))
+    return "Main baat kar sakta hoon, sawal ka jawab de sakta hoon aur awaaz me bol sakta hoon.";
+
+  if (text.includes("joke"))
+    return "Ek joke suno: Programmer ne girlfriend se kaha, tum meri life ka bug ho!";
+
+  return "Samajh nahi aaya bhai, thoda aur clearly bolo.";
+}
+
+// 🔊 Text to Speech
+function speak(text) {
+  output.innerHTML += "<br><br>🤖 AI: " + text;
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "hi-IN";
+  speech.rate = 1;
+  speech.pitch = 1;
+
+  window.speechSynthesis.speak(speech);
+}
+</script>
+
+</body>
+</html>
