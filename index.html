@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastCalc Pro</title>
+
+<style>
+:root{
+  --bg:#f5f6fa;
+  --card:#ffffff;
+  --btn:#eaeaea;
+  --accent:#4caf50;
+  --text:#111;
+}
+body.dark{
+  --bg:#0f1115;
+  --card:#1c1f26;
+  --btn:#2a2e38;
+  --accent:#4caf50;
+  --text:#fff;
+}
+*{box-sizing:border-box;font-family:system-ui,Arial}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.calc{
+  width:360px;
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  overflow:hidden;
+}
+.top{
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.top button{
+  border:none;
+  background:var(--btn);
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.display{
+  padding:16px;
+  text-align:right;
+}
+.expr{
+  font-size:14px;
+  opacity:.7;
+  min-height:18px;
+}
+.result{
+  font-size:32px;
+  font-weight:600;
+  overflow:hidden;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding:14px;
+}
+button.key{
+  padding:18px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:var(--btn);
+  cursor:pointer;
+  transition:.05s;
+}
+button.key:active{transform:scale(.95)}
+.op{background:#ffd166}
+.eq{background:var(--accent);color:#fff;grid-column:span 2}
+.fn{background:#cdb4db}
+</style>
+</head>
+
+<body>
+<div class="calc">
+  <div class="top">
+    <b>FastCalc</b>
+    <button id="theme">🌙</button>
+  </div>
+
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="result" id="res">0</div>
+  </div>
+
+  <div class="grid" id="keys">
+    <button class="key fn" data="sin(">sin</button>
+    <button class="key fn" data="cos(">cos</button>
+    <button class="key fn" data="tan(">tan</button>
+    <button class="key fn" data="sqrt(">√</button>
+
+    <button class="key" data="7">7</button>
+    <button class="key" data="8">8</button>
+    <button class="key" data="9">9</button>
+    <button class="key op" data="/">÷</button>
+
+    <button class="key" data="4">4</button>
+    <button class="key" data="5">5</button>
+    <button class="key" data="6">6</button>
+    <button class="key op" data="*">×</button>
+
+    <button class="key" data="1">1</button>
+    <button class="key" data="2">2</button>
+    <button class="key" data="3">3</button>
+    <button class="key op" data="-">−</button>
+
+    <button class="key" data="0">0</button>
+    <button class="key" data=".">.</button>
+    <button class="key op" data="+">+</button>
+    <button class="key fn" data="pow2">x²</button>
+
+    <button class="key fn" data="C">C</button>
+    <button class="key fn" data="AC">AC</button>
+    <button class="key eq" data="=">=</button>
+  </div>
+</div>
+
+<script>
+const exprEl = document.getElementById("expr");
+const resEl  = document.getElementById("res");
+let expr = "";
+
+function safeEval(e){
+  try{
+    e = e.replace(/sin/g,"Math.sin")
+         .replace(/cos/g,"Math.cos")
+         .replace(/tan/g,"Math.tan")
+         .replace(/sqrt/g,"Math.sqrt");
+    return Function("return "+e)();
+  }catch{
+    return "Error";
+  }
+}
+
+document.getElementById("keys").addEventListener("click",e=>{
+  if(!e.target.classList.contains("key"))return;
+  let v = e.target.getAttribute("data");
+
+  if(v==="AC"){expr="";resEl.textContent="0";}
+  else if(v==="C"){expr=expr.slice(0,-1);}
+  else if(v==="pow2"){expr+="**2";}
+  else if(v==="="){
+    let out = safeEval(expr);
+    resEl.textContent = out;
+    expr = String(out);
+  }else{
+    expr+=v;
+  }
+  exprEl.textContent = expr;
+});
+
+document.addEventListener("keydown",e=>{
+  if(/[0-9+\-*/.]/.test(e.key)) expr+=e.key;
+  if(e.key==="Enter"){
+    let out = safeEval(expr);
+    resEl.textContent = out;
+    expr = String(out);
+  }
+  if(e.key==="Backspace") expr=expr.slice(0,-1);
+  exprEl.textContent=expr;
+});
+
+document.getElementById("theme").onclick=()=>{
+  document.body.classList.toggle("dark");
+};
+</script>
+</body>
+</html>
