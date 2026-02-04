@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Calculator</title>
+
+<style>
+:root{
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --btn:#eaeaea;
+  --text:#000;
+  --accent:#0f9d58;
+}
+.dark{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --btn:#2a2a2a;
+  --text:#fff;
+  --accent:#0f9d58;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont;}
+body{
+  margin:0;
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.calculator{
+  width:100%;
+  max-width:380px;
+  background:var(--card);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.toggle{
+  cursor:pointer;
+  font-size:14px;
+}
+.display{
+  margin-top:10px;
+  background:var(--btn);
+  border-radius:10px;
+  padding:10px;
+}
+.expression{
+  font-size:14px;
+  opacity:.7;
+  min-height:20px;
+}
+.result{
+  font-size:30px;
+  font-weight:600;
+  text-align:right;
+  overflow-x:auto;
+}
+.buttons{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+button{
+  padding:14px 0;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  transition:transform .05s,background .2s;
+}
+button:active{transform:scale(.96)}
+.op{color:var(--accent);font-weight:600}
+.equal{
+  grid-column:span 2;
+  background:var(--accent);
+  color:#fff;
+}
+.history{
+  margin-top:8px;
+  font-size:12px;
+  opacity:.7;
+  max-height:60px;
+  overflow:auto;
+}
+@media(max-width:360px){
+  button{font-size:14px;padding:12px 0}
+}
+</style>
+</head>
+
+<body>
+<div class="calculator" id="calc">
+  <div class="top">
+    <div class="toggle" id="mode">🌙 Dark</div>
+    <div class="toggle" id="angle">DEG</div>
+  </div>
+
+  <div class="display">
+    <div class="expression" id="exp"></div>
+    <div class="result" id="res">0</div>
+  </div>
+
+  <div class="buttons" id="btns">
+    <button>AC</button><button>C</button><button>%</button><button class="op">÷</button>
+
+    <button>7</button><button>8</button><button>9</button><button class="op">×</button>
+
+    <button>4</button><button>5</button><button>6</button><button class="op">−</button>
+
+    <button>1</button><button>2</button><button>3</button><button class="op">+</button>
+
+    <button>0</button><button>.</button><button class="equal">=</button>
+  </div>
+
+  <div class="history" id="history"></div>
+</div>
+
+<script>
+let exp="",deg=true,mem=0,history=[];
+const expEl=res=document.getElementById("res");
+const expPrev=document.getElementById("exp");
+const hist=document.getElementById("history");
+
+document.getElementById("btns").addEventListener("click",e=>{
+  if(e.target.tagName!=="BUTTON")return;
+  const v=e.target.innerText;
+
+  if(v==="AC"){exp="";update("0");return;}
+  if(v==="C"){exp=exp.slice(0,-1);update();return;}
+  if(v==="="){
+    try{
+      let r=calc(exp);
+      history.unshift(exp+" = "+r);
+      history=history.slice(0,10);
+      exp=""+r;
+      update(r);
+      hist.innerHTML=history.join("<br>");
+    }catch{update("Invalid Input")}
+    return;
+  }
+  exp+=v.replace("×","*").replace("÷","/").replace("−","-");
+  update();
+});
+
+function calc(e){
+  return Function("return "+e)();
+}
+function update(v){
+  expPrev.textContent=exp;
+  res.textContent=v||exp||"0";
+}
+
+document.getElementById("mode").onclick=()=>{
+  document.body.classList.toggle("dark");
+};
+document.getElementById("angle").onclick=()=>{
+  deg=!deg;
+  document.getElementById("angle").innerText=deg?"DEG":"RAD";
+};
+</script>
+</body>
+</html>
