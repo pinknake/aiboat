@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Google Style Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+<!-- PWA -->
+<link rel="manifest" id="manifest">
+<meta name="theme-color" content="#202124">
+
+<style>
+:root{
+  --bg:#202124;
+  --btn:#3c4043;
+  --btn2:#5f6368;
+  --text:#e8eaed;
+  --accent:#8ab4f8;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family: system-ui, sans-serif;
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.calculator{
+  width:100%;
+  max-width:360px;
+  padding:10px;
+}
+.display{
+  text-align:right;
+  padding:20px 10px;
+  font-size:2.4rem;
+  word-wrap:break-word;
+  min-height:80px;
+}
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+button{
+  font-size:1.4rem;
+  padding:18px 0;
+  border:none;
+  border-radius:50px;
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  transition:background .05s;
+}
+button:active{
+  background:var(--btn2);
+}
+.op{ color:var(--accent); }
+.equal{
+  background:var(--accent);
+  color:#000;
+}
+.zero{
+  grid-column:span 2;
+}
+</style>
+</head>
+
+<body>
+<div class="calculator">
+  <div id="display" class="display">0</div>
+
+  <div class="buttons">
+    <button class="op" data-v="AC">AC</button>
+    <button class="op" data-v="(">(</button>
+    <button class="op" data-v=")">)</button>
+    <button class="op" data-v="/">÷</button>
+
+    <button data-v="7">7</button>
+    <button data-v="8">8</button>
+    <button data-v="9">9</button>
+    <button class="op" data-v="*">×</button>
+
+    <button data-v="4">4</button>
+    <button data-v="5">5</button>
+    <button data-v="6">6</button>
+    <button class="op" data-v="-">−</button>
+
+    <button data-v="1">1</button>
+    <button data-v="2">2</button>
+    <button data-v="3">3</button>
+    <button class="op" data-v="+">+</button>
+
+    <button class="zero" data-v="0">0</button>
+    <button data-v=".">.</button>
+    <button class="equal" data-v="=">=</button>
+  </div>
+</div>
+
+<!-- Click Sound -->
+<audio id="clickSound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=">
+</audio>
+
+<script>
+const display=document.getElementById("display");
+let expr="";
+
+document.querySelector(".buttons").addEventListener("click",e=>{
+  if(e.target.tagName!=="BUTTON")return;
+
+  // vibration
+  if(navigator.vibrate) navigator.vibrate(20);
+
+  // sound
+  document.getElementById("clickSound").currentTime=0;
+  document.getElementById("clickSound").play();
+
+  const v=e.target.dataset.v;
+
+  if(v==="AC"){
+    expr="";
+    display.textContent="0";
+    return;
+  }
+  if(v==="="){
+    try{
+      expr=expr.replace(/÷/g,"/").replace(/×/g,"*");
+      expr=String(eval(expr));
+      display.textContent=expr;
+    }catch{
+      display.textContent="Error";
+      expr="";
+    }
+    return;
+  }
+  if(expr==="0") expr="";
+  expr+=v;
+  display.textContent=expr;
+});
+
+// Keyboard support
+document.addEventListener("keydown",e=>{
+  if("0123456789+-*/().".includes(e.key)){
+    expr+=e.key;
+    display.textContent=expr;
+  }
+  if(e.key==="Enter"){
+    try{
+      expr=String(eval(expr));
+      display.textContent=expr;
+    }catch{
+      display.textContent="Error";
+      expr="";
+    }
+  }
+  if(e.key==="Backspace"){
+    expr=expr.slice(0,-1);
+    display.textContent=expr||"0";
+  }
+});
+
+// PWA Manifest
+const manifest={
+  name:"Calculator",
+  short_name:"Calculator",
+  start_url:".",
+  display:"standalone",
+  background_color:"#202124",
+  theme_color:"#202124",
+  icons:[{
+    src:"https://cdn-icons-png.flaticon.com/512/1006/1006548.png",
+    sizes:"192x192",
+    type:"image/png"
+  }]
+};
+const blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
+document.getElementById("manifest").href=URL.createObjectURL(blob);
+
+// Service Worker
+if("serviceWorker"in navigator){
+  const swCode=`
+  self.addEventListener('install',e=>self.skipWaiting());
+  self.addEventListener('fetch',e=>{});
+  `;
+  const swBlob=new Blob([swCode],{type:"text/javascript"});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+}
+</script>
+</body>
+</html>
