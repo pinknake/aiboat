@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Google Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#202124">
+
+<style>
+body{
+  margin:0;
+  background:#202124;
+  font-family:system-ui;
+  color:#e8eaed;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.calc{
+  width:100%;
+  max-width:360px;
+  padding:10px;
+}
+.display{
+  text-align:right;
+  font-size:2.5rem;
+  padding:20px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+button{
+  font-size:1.4rem;
+  padding:18px;
+  border:none;
+  border-radius:50px;
+  background:#3c4043;
+  color:#fff;
+}
+button:active{background:#5f6368;}
+.op{color:#8ab4f8;}
+.eq{background:#8ab4f8;color:#000;}
+.zero{grid-column:span 2;}
+</style>
+</head>
+
+<body>
+<div class="calc">
+  <div id="d" class="display">0</div>
+  <div class="grid">
+    <button class="op">AC</button><button>(</button><button>)</button><button class="op">/</button>
+    <button>7</button><button>8</button><button>9</button><button class="op">*</button>
+    <button>4</button><button>5</button><button>6</button><button class="op">-</button>
+    <button>1</button><button>2</button><button>3</button><button class="op">+</button>
+    <button class="zero">0</button><button>.</button><button class="eq">=</button>
+  </div>
+</div>
+
+<!-- REAL CLICK SOUND -->
+<audio id="click" src="https://actions.google.com/sounds/v1/ui/click.ogg" preload="auto"></audio>
+
+<script>
+let exp="";
+const d=document.getElementById("d");
+const sound=document.getElementById("click");
+
+document.querySelector(".grid").onclick=e=>{
+  if(e.target.tagName!=="BUTTON")return;
+
+  // vibration
+  if(navigator.vibrate) navigator.vibrate(15);
+
+  // sound (user gesture ✔)
+  sound.currentTime=0;
+  sound.play();
+
+  let v=e.target.innerText;
+
+  if(v==="AC"){exp="";d.innerText="0";return;}
+  if(v==="="){
+    try{exp=String(eval(exp));d.innerText=exp;}
+    catch{d.innerText="Error";exp="";}
+    return;
+  }
+  exp+=v;
+  d.innerText=exp;
+};
+</script>
+
+</body>
+</html>
