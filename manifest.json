@@ -1,0 +1,15 @@
+{
+  "name": "Fast QR Scanner",
+  "short_name": "QR Scanner",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8b/QR_code_icon.svg",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
