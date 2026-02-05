@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fast QR Scanner</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
+<style>
+body{
+margin:0;
+font-family:system-ui;
+background:#0f172a;
+color:#fff;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+header{
+width:100%;
+padding:14px;
+text-align:center;
+font-size:20px;
+background:#020617;
+}
+video{
+width:100%;
+max-width:420px;
+border-radius:12px;
+margin-top:10px;
+}
+.controls{
+display:flex;
+gap:10px;
+margin:12px;
+flex-wrap:wrap;
+justify-content:center;
+}
+button{
+padding:10px 14px;
+border:none;
+border-radius:8px;
+font-size:14px;
+cursor:pointer;
+background:#2563eb;
+color:white;
+}
+button.secondary{background:#334155}
+.result{
+margin-top:10px;
+background:#020617;
+padding:12px;
+border-radius:10px;
+width:90%;
+max-width:420px;
+word-break:break-all;
+}
+.result a{color:#38bdf8}
+.history{
+width:90%;
+max-width:420px;
+margin-top:10px;
+font-size:13px;
+}
+.history div{
+padding:6px;
+border-bottom:1px solid #1e293b;
+}
+</style>
+</head>
+
+<body>
+
+<header>⚡ Fast QR Scanner</header>
+
+<video id="video" autoplay playsinline></video>
+
+<div class="controls">
+<button id="flashBtn">🔦 Flash</button>
+<button id="soundBtn" class="secondary">🔊 Sound</button>
+<button id="clearBtn" class="secondary">🗑 History</button>
+</div>
+
+<div class="result" id="result">Scan a QR code…</div>
+
+<div class="history" id="history"></div>
+
+<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+<script>
+let video=document.getElementById("video");
+let canvas=document.createElement("canvas");
+let ctx=canvas.getContext("2d");
+let scanning=true;
+let sound=true;
+let history=[];
+
+navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+.then(stream=>video.srcObject=stream);
+
+function scan(){
+if(!scanning)return;
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+ctx.drawImage(video,0,0);
+let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+let code=jsQR(img.data,img.width,img.height);
+if(code){
+scanning=false;
+document.getElementById("result").innerHTML=
+`<a href="${code.data}" target="_blank">${code.data}</a>`;
+if(sound)document.getElementById("beep").play();
+history.unshift(code.data);
+renderHistory();
+setTimeout(()=>scanning=true,1500);
+}
+requestAnimationFrame(scan);
+}
+scan();
+
+function renderHistory(){
+document.getElementById("history").innerHTML=
+history.slice(0,5).map(h=>`<div>${h}</div>`).join("");
+}
+
+document.getElementById("soundBtn").onclick=()=>{
+sound=!sound;
+soundBtn.innerText=sound?"🔊 Sound":"🔇 Sound";
+};
+
+document.getElementById("clearBtn").onclick=()=>{
+history=[];
+renderHistory();
+document.getElementById("result").innerText="Scan a QR code…";
+};
+
+// Flashlight (supported phones only)
+document.getElementById("flashBtn").onclick=()=>{
+let track=video.srcObject.getVideoTracks()[0];
+let cap=track.getCapabilities();
+if(cap.torch){
+track.applyConstraints({advanced:[{torch:true}]});
+setTimeout(()=>track.applyConstraints({advanced:[{torch:false}]}),1500);
+}
+};
+
+// PWA SW
+if("serviceWorker"in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
