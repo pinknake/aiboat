@@ -64,15 +64,25 @@ const iframe = document.getElementById("browser");
 const urlBox = document.getElementById("url");
 
 function go(){
-  let url = urlBox.value.trim();
-  if(!url) return;
+  let q = urlBox.value.trim();
+  if(!q) return;
 
-  if(!url.startsWith("http")){
-    url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+  let url = "";
+
+  if(q.startsWith("http://") || q.startsWith("https://")){
+    url = q;
   }
+  else if(q.includes(".")){
+    url = "https://" + q;
+  }
+  else{
+    url = "https://www.google.com/search?q=" + encodeURIComponent(q);
+  }
+
   iframe.src = url;
 }
 
+  
 function reloadPage(){
   iframe.contentWindow.location.reload();
 }
