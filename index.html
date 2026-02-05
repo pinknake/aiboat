@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart QR Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{
+margin:0;
+background:#0f172a;
+color:#fff;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+.app{
+width:100%;
+max-width:420px;
+padding:15px;
+}
+h2{text-align:center;margin-bottom:10px}
+video{
+width:100%;
+border-radius:16px;
+background:#000;
+}
+.result{
+margin-top:12px;
+padding:12px;
+border-radius:12px;
+background:#020617;
+word-break:break-all;
+}
+a{color:#38bdf8;text-decoration:none}
+button{
+width:100%;
+margin-top:10px;
+padding:14px;
+border:none;
+border-radius:14px;
+background:#22c55e;
+color:#000;
+font-size:16px;
+font-weight:600;
+}
+button:active{transform:scale(.97)}
+.status{
+text-align:center;
+opacity:.7;
+margin-top:6px;
+font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+<h2>QR Scanner</h2>
+
+<video id="video" playsinline></video>
+
+<div class="result" id="result">
+Scan a QR code…
+</div>
+
+<button onclick="resetScan()">Scan Next</button>
+
+<div class="status" id="status">Camera starting…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+const video=document.getElementById("video");
+const canvas=document.createElement("canvas");
+const ctx=canvas.getContext("2d");
+let scanning=true;
+
+navigator.mediaDevices.getUserMedia({
+video:{facingMode:"environment"}
+}).then(stream=>{
+video.srcObject=stream;
+video.play();
+requestAnimationFrame(scanLoop);
+document.getElementById("status").innerText="Scanning…";
+});
+
+function scanLoop(){
+if(!scanning) return;
+if(video.readyState===video.HAVE_ENOUGH_DATA){
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+ctx.drawImage(video,0,0);
+const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+const code=jsQR(img.data,img.width,img.height);
+if(code){
+scanning=false;
+showResult(code.data);
+}
+}
+requestAnimationFrame(scanLoop);
+}
+
+function showResult(data){
+const res=document.getElementById("result");
+if(data.startsWith("http")){
+res.innerHTML=`<a href="${data}" target="_blank">${data}</a>`;
+setTimeout(()=>location.href=data,800);
+}else{
+res.innerText=data;
+}
+navigator.vibrate?.(120);
+document.getElementById("status").innerText="Scan complete";
+}
+
+function resetScan(){
+scanning=true;
+document.getElementById("result").innerText="Scanning again…";
+document.getElementById("status").innerText="Scanning…";
+requestAnimationFrame(scanLoop);
+}
+</script>
+</body>
+</html>
