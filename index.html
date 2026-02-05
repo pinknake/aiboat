@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Scanner Pro</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{
+  background:#0f172a;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.app{
+  width:100%;
+  max-width:420px;
+  background:#020617;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.header{
+  padding:14px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+}
+.camera{position:relative}
+video{
+  width:100%;
+  height:320px;
+  object-fit:cover;
+}
+.scan-box{
+  position:absolute;
+  inset:40px;
+  border:2px solid #22c55e;
+  border-radius:12px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.45);
+}
+.section{padding:14px}
+.label{font-size:12px;opacity:.7;margin-bottom:6px}
+.output{
+  padding:10px;
+  border:1px solid #334155;
+  border-radius:10px;
+  color:#22c55e;
+  word-break:break-all;
+  text-decoration:none;
+  display:block;
+}
+.btn{
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#22c55e;
+  color:#020617;
+  font-weight:600;
+}
+.history{
+  margin-top:10px;
+}
+.history-item{
+  padding:8px;
+  border:1px solid #334155;
+  border-radius:8px;
+  margin-bottom:6px;
+  font-size:13px;
+  color:#38bdf8;
+  word-break:break-all;
+}
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:.6;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="header">QR Scanner Pro</div>
+
+  <div class="camera">
+    <video id="video" autoplay playsinline></video>
+    <div class="scan-box"></div>
+  </div>
+
+  <div class="section">
+    <div class="label">Scan Result</div>
+    <a id="result" class="output" href="#">Waiting for scan…</a>
+    <button class="btn" onclick="restart()">Scan Again</button>
+
+    <div class="history">
+      <div class="label">History</div>
+      <div id="historyList"></div>
+      <button class="btn" style="background:#334155;color:#fff" onclick="clearHistory()">Clear History</button>
+    </div>
+  </div>
+
+  <div class="footer">Fast • Vibrate • Sound • Secure</div>
+</div>
+
+<!-- QR LIB -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+const video = document.getElementById("video");
+const result = document.getElementById("result");
+const historyList = document.getElementById("historyList");
+
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
+let scanning = true;
+
+// Beep sound
+const beep = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-beep-tone-1016.mp3");
+
+// Load history
+let history = JSON.parse(localStorage.getItem("qrHistory")||"[]");
+renderHistory();
+
+// Camera
+navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+.then(stream=>{
+  video.srcObject = stream;
+  requestAnimationFrame(scan);
+})
+.catch(()=>alert("Camera permission denied"));
+
+function scan(){
+  if(!scanning) return;
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video,0,0);
+    let img = ctx.getImageData(0,0,canvas.width,canvas.height);
+    let code = jsQR(img.data,img.width,img.height);
+    if(code){
+      scanning=false;
+      onScan(code.data);
+    }
+  }
+  requestAnimationFrame(scan);
+}
+
+function onScan(data){
+  // vibration
+  if(navigator.vibrate) navigator.vibrate(200);
+
+  // sound
+  beep.play().catch(()=>{});
+
+  result.textContent = data;
+  result.href = data.startsWith("http") ? data : "#";
+
+  // save history
+  history.unshift(data);
+  history = history.slice(0,5);
+  localStorage.setItem("qrHistory",JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory(){
+  historyList.innerHTML="";
+  history.forEach(h=>{
+    let div=document.createElement("div");
+    div.className="history-item";
+    div.textContent=h;
+    div.onclick=()=>{ if(h.startsWith("http")) window.location.href=h; };
+    historyList.appendChild(div);
+  });
+}
+
+function restart(){
+  result.textContent="Waiting for scan…";
+  result.href="#";
+  scanning=true;
+}
+
+function clearHistory(){
+  localStorage.removeItem("qrHistory");
+  history=[];
+  renderHistory();
+}
+</script>
+
+</body>
+</html>
