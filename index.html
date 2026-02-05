@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Scanner</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{
+  background:#0f172a;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.app{
+  width:100%;
+  max-width:420px;
+  background:#020617;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.header{
+  padding:14px;
+  text-align:center;
+  background:#020617;
+  font-size:18px;
+  font-weight:600;
+}
+.camera{
+  position:relative;
+}
+video{
+  width:100%;
+  height:320px;
+  object-fit:cover;
+}
+.scan-box{
+  position:absolute;
+  inset:40px;
+  border:2px solid #22c55e;
+  border-radius:12px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.4);
+}
+.result{
+  padding:14px;
+  background:#020617;
+}
+.result p{
+  font-size:13px;
+  opacity:.8;
+  margin-bottom:6px;
+}
+.result a{
+  display:block;
+  padding:10px;
+  background:#020617;
+  border:1px solid #334155;
+  border-radius:10px;
+  color:#22c55e;
+  word-break:break-all;
+  text-decoration:none;
+}
+.result a:hover{
+  background:#020617;
+}
+.btn{
+  margin-top:12px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#22c55e;
+  color:#020617;
+  font-size:15px;
+  font-weight:600;
+}
+.footer{
+  text-align:center;
+  font-size:11px;
+  opacity:.6;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="header">QR Code Scanner</div>
+
+  <div class="camera">
+    <video id="video" autoplay playsinline></video>
+    <div class="scan-box"></div>
+  </div>
+
+  <div class="result">
+    <p>Scan Result</p>
+    <a id="output" href="#" target="_blank">Waiting for scan...</a>
+    <button class="btn" onclick="restart()">Scan Again</button>
+  </div>
+
+  <div class="footer">Fast • Simple • Secure</div>
+</div>
+
+<!-- QR LIB -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+const video = document.getElementById("video");
+const output = document.getElementById("output");
+
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
+let scanning = true;
+
+navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }})
+.then(stream=>{
+  video.srcObject = stream;
+  requestAnimationFrame(scan);
+})
+.catch(()=> alert("Camera access denied"));
+
+function scan(){
+  if(!scanning) return;
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video,0,0);
+    let img = ctx.getImageData(0,0,canvas.width,canvas.height);
+    let code = jsQR(img.data, img.width, img.height);
+    if(code){
+      scanning = false;
+      output.textContent = code.data;
+      output.href = code.data.startsWith("http") ? code.data : "#";
+      if(code.data.startsWith("http")) window.location.href = code.data;
+    }
+  }
+  requestAnimationFrame(scan);
+}
+
+function restart(){
+  output.textContent = "Waiting for scan...";
+  output.href="#";
+  scanning = true;
+}
+</script>
+
+</body>
+</html>
