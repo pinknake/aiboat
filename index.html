@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pro QR Scanner</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+
+<link rel="manifest" href="data:application/json,{
+  &quot;name&quot;:&quot;QR Scanner&quot;,
+  &quot;short_name&quot;:&quot;QRScan&quot;,
+  &quot;start_url&quot;:&quot;.&quot;,
+  &quot;display&quot;:&quot;standalone&quot;,
+  &quot;background_color&quot;:&quot;#0f172a&quot;,
+  &quot;theme_color&quot;:&quot;#0f172a&quot;
+}">
+
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{
+margin:0;background:#0f172a;color:#fff;
+display:flex;justify-content:center;min-height:100vh
+}
+.app{width:100%;max-width:420px;padding:14px}
+h2{text-align:center;margin:8px 0}
+video{
+width:100%;border-radius:16px;background:#000
+}
+.controls{
+display:flex;gap:8px;margin-top:10px
+}
+.controls button{
+flex:1;padding:10px;border:none;border-radius:12px;
+background:#1e293b;color:#fff;font-size:14px
+}
+button:active{transform:scale(.96)}
+.result, .history{
+margin-top:10px;padding:12px;border-radius:12px;
+background:#020617;font-size:14px
+}
+a{color:#38bdf8;text-decoration:none}
+.toggle{
+display:flex;justify-content:space-between;margin-top:8px;
+font-size:14px;opacity:.85
+}
+small{opacity:.6}
+</style>
+</head>
+
+<body>
+<div class="app">
+<h2>QR Scanner</h2>
+
+<video id="video" playsinline></video>
+
+<div class="controls">
+<button onclick="toggleFlash()">🔦 Flash</button>
+<button onclick="resetScan()">♻ Scan</button>
+<button onclick="installApp()">⬇ Install</button>
+</div>
+
+<div class="toggle">
+<label><input type="checkbox" id="sound" checked> Sound</label>
+<label><input type="checkbox" id="auto" checked> Auto-Redirect</label>
+</div>
+
+<div class="result" id="result">Scanning…</div>
+
+<div class="history" id="history">
+<b>History</b><br><small>No scans yet</small>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+let video=document.getElementById("video");
+let canvas=document.createElement("canvas");
+let ctx=canvas.getContext("2d");
+let scanning=true, track, torch=false;
+let history=[];
+
+navigator.mediaDevices.getUserMedia({
+video:{facingMode:"environment"}
+}).then(stream=>{
+video.srcObject=stream;
+track=stream.getVideoTracks()[0];
+video.play();
+requestAnimationFrame(scanLoop);
+});
+
+function scanLoop(){
+if(!scanning) return;
+if(video.readyState===video.HAVE_ENOUGH_DATA){
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+ctx.drawImage(video,0,0);
+let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+let code=jsQR(img.data,img.width,img.height);
+if(code){handleResult(code.data)}
+}
+requestAnimationFrame(scanLoop);
+}
+
+function handleResult(data){
+scanning=false;
+if(document.getElementById("sound").checked)
+new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=").play();
+
+navigator.vibrate?.(120);
+document.getElementById("result").innerHTML=
+data.startsWith("http")?`<a href="${data}" target="_blank">${data}</a>`:data;
+
+history.unshift(data);
+history=history.slice(0,5);
+renderHistory();
+
+if(document.getElementById("auto").checked && data.startsWith("http")){
+setTimeout(()=>location.href=data,800);
+}
+}
+
+function renderHistory(){
+let h=document.getElementById("history");
+h.innerHTML="<b>History</b><br>"+history.map(i=>"• "+i).join("<br>");
+}
+
+function resetScan(){
+scanning=true;
+document.getElementById("result").innerText="Scanning…";
+requestAnimationFrame(scanLoop);
+}
+
+async function toggleFlash(){
+if(!track) return;
+torch=!torch;
+try{
+await track.applyConstraints({advanced:[{torch}]});
+}catch(e){alert("Flash not supported")}
+}
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt",e=>{
+e.preventDefault();deferredPrompt=e;
+});
+function installApp(){
+if(deferredPrompt){
+deferredPrompt.prompt();
+deferredPrompt=null;
+}else alert("Already installed / not supported");
+}
+</script>
+</body>
+</html>
