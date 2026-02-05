@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+    margin:0;
+    background:#0f172a;
+    color:#fff;
+    font-family:Arial, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+h2{
+    margin:15px 0 5px;
+}
+#reader{
+    width:95%;
+    max-width:420px;
+    border-radius:15px;
+    overflow:hidden;
+}
+#result{
+    margin:15px;
+    padding:12px;
+    background:#1e293b;
+    border-radius:10px;
+    word-break:break-all;
+    display:none;
+}
+#result a{
+    color:#38bdf8;
+    text-decoration:none;
+    font-weight:bold;
+}
+.toggle{
+    margin-top:10px;
+}
+button{
+    margin-top:10px;
+    padding:10px 16px;
+    border:none;
+    border-radius:20px;
+    background:#38bdf8;
+    color:#000;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>QR Scanner</h2>
+<p style="opacity:.7;font-size:14px;">Auto scan • Auto reset</p>
+
+<div id="reader"></div>
+
+<div class="toggle">
+    <label>
+        <input type="checkbox" id="autoRedirect">
+        Auto Redirect
+    </label>
+</div>
+
+<div id="result"></div>
+
+<script>
+const resultBox = document.getElementById("result");
+const autoRedirect = document.getElementById("autoRedirect");
+
+let html5QrCode = new Html5Qrcode("reader");
+let scanning = true;
+
+function startScanner(){
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrSuccess
+    );
+}
+
+function qrSuccess(decodedText){
+    if(!scanning) return;
+    scanning = false;
+
+    resultBox.style.display = "block";
+    resultBox.innerHTML = `Scanned Result:<br><a href="${decodedText}" target="_blank">${decodedText}</a>`;
+
+    if(autoRedirect.checked && decodedText.startsWith("http")){
+        setTimeout(()=>window.location.href = decodedText, 800);
+    }
+
+    setTimeout(()=>{
+        scanning = true;
+    }, 1500);
+}
+
+startScanner();
+</script>
+
+</body>
+</html>
